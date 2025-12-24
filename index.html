@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merry Christmas - Greeting Card from Bảo Nam</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Quicksand:wght@300;500&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background: #000000; 
+            font-family: 'Quicksand', sans-serif; 
+        }
+        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        
+        /* Hiệu ứng các icon và chữ rơi tự do */
+        .xmas-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .falling-item {
+            position: absolute;
+            top: -100px;
+            opacity: 0.6;
+            animation: falling linear infinite;
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        /* Chữ chúc mừng rơi */
+        .falling-text {
+            font-family: 'Great Vibes', cursive;
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        @keyframes falling {
+            0% { transform: translateY(0) rotate(0deg) translateX(0); }
+            25% { transform: translateY(25vh) rotate(5deg) translateX(15px); }
+            50% { transform: translateY(50vh) rotate(-5deg) translateX(-15px); }
+            75% { transform: translateY(75vh) rotate(5deg) translateX(15px); }
+            100% { transform: translateY(110vh) rotate(0deg) translateX(0); }
+        }
+
+        /* UI Overlay */
+        .ui-overlay {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            text-align: center;
+            width: 100%;
+            pointer-events: none;
+        }
+
+        .main-card {
+            display: inline-block;
+            background: #ffffff; 
+            padding: 20px 40px;
+            border-radius: 15px;
+            pointer-events: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: none;
+        }
+
+        .christmas-title {
+            font-family: 'Great Vibes', cursive; 
+            color: #d61c1c; 
+            margin: 0;
+            font-size: 3.8rem;
+            line-height: 1.1;
+        }
+
+        .open-btn {
+            margin-top: 15px;
+            background: #d61c1c;
+            color: white;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: 0.3s;
+            pointer-events: auto;
+            box-shadow: 0 4px 10px rgba(214, 28, 28, 0.3);
+        }
+        .open-btn:hover { background: #b91c1c; transform: scale(1.05); }
+
+        /* Thiệp Chúc Mừng với Khung */
+        #greeting-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            display: none; 
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+        }
+
+        .card-frame {
+            background: #fff;
+            width: 90%;
+            max-width: 550px;
+            padding: 15px;
+            border-radius: 20px;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .inner-border {
+            border: 2px solid #1a472a;
+            border-radius: 12px;
+            padding: 30px;
+            position: relative;
+            text-align: center;
+        }
+
+        .corner {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border: 4px solid #d61c1c;
+        }
+        .top-left { top: -5px; left: -5px; border-right: none; border-bottom: none; border-top-left-radius: 10px; }
+        .top-right { top: -5px; right: -5px; border-left: none; border-bottom: none; border-top-right-radius: 10px; }
+        .bottom-left { bottom: -5px; left: -5px; border-right: none; border-top: none; border-bottom-left-radius: 10px; }
+        .bottom-right { bottom: -5px; right: -5px; border-left: none; border-top: none; border-bottom-right-radius: 10px; }
+
+        .card-text {
+            font-family: 'Great Vibes', cursive;
+            color: #1a472a;
+            font-size: 1.85rem;
+            line-height: 1.5;
+            padding: 10px 0;
+        }
+
+        .close-card {
+            margin-top: 25px;
+            color: #888;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: block;
+        }
+        .close-card:hover { color: #d61c1c; }
+
+        .music-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fff;
+            color: #d61c1c;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 100;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <button class="music-btn" onclick="toggleMusic()">Music: <span id="m-status">TẮT</span> 🎵</button>
+    
+    <div id="xmas-elements-container" class="xmas-elements"></div>
+    <div id="canvas-container"></div>
+
+    <div class="ui-overlay">
+        <div class="main-card">
+            <h1 class="christmas-title">Merry Christmas</h1>
+            <button class="open-btn" onclick="openCard()">Mở thiệp từ Bảo Nam</button>
+        </div>
+    </div>
+
+    <div id="greeting-modal">
+        <div class="card-frame">
+            <div class="inner-border">
+                <div class="corner top-left"></div>
+                <div class="corner top-right"></div>
+                <div class="corner bottom-left"></div>
+                <div class="corner bottom-right"></div>
+
+                <div class="text-5xl mb-4">🎄✨🎁</div>
+                <p class="card-text">
+                    Chào bạn,<br>
+                    Giáng sinh này, mình chúc bạn luôn có thật nhiều sức khỏe, tinh thần thoải mái để học tập thật tốt và có những giây phút nghỉ ngơi vui vẻ bên gia đình.<br>
+                    Chúc chúng mình sẽ có thêm nhiều kỷ niệm đẹp trong quãng thời gian đi học cùng nhau nhé.<br>
+                    Giáng sinh ấm áp!
+                </p>
+                <div class="text-red-600 font-bold mt-4 text-3xl" style="font-family: 'Great Vibes', cursive;">- Bảo Nam -</div>
+                <span class="close-card" onclick="closeCard()">[ Đóng lại ]</span>
+            </div>
+        </div>
+    </div>
+
+    <audio id="bgMusic" loop>
+        <source src="https://files.catbox.moe/1ead7f.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        let scene, camera, renderer, clock;
+        let treeGroup, star, snow, ledLights = [];
+        let targetRotationY = 0;
+        let isDragging = false;
+
+        // Hàm tạo icon và chữ rơi né vùng giữa (cây thông)
+        function createFallingElements() {
+            const container = document.getElementById('xmas-elements-container');
+            const icons = ['🍭', '🎁', '🦌', '⛄', '🧤', '🍪', '🔔', '🎄', '❄️', '❄️'];
+            const phrases = ['Merry Christmas', 'Giáng Sinh An Lành', 'Chúc Mừng Giáng Sinh'];
+            
+            const totalElements = 40; 
+
+            for (let i = 0; i < totalElements; i++) {
+                const isText = Math.random() < 0.2; // Tỉ lệ 20% là chữ, 80% là icon
+                const element = document.createElement('div');
+                element.className = 'falling-item' + (isText ? ' falling-text' : '');
+                
+                if (isText) {
+                    element.innerText = phrases[Math.floor(Math.random() * phrases.length)];
+                    element.style.fontSize = (0.9 + Math.random() * 0.5) + 'rem';
+                } else {
+                    element.innerText = icons[Math.floor(Math.random() * icons.length)];
+                    element.style.fontSize = (0.7 + Math.random() * 0.6) + 'rem';
+                }
+
+                // Logic né cây thông (vùng giữa từ 35% đến 65% chiều rộng màn hình)
+                let leftPos;
+                if (Math.random() < 0.5) {
+                    leftPos = Math.random() * 30; // Rơi bên trái (0-30%)
+                } else {
+                    leftPos = 70 + Math.random() * 30; // Rơi bên phải (70-100%)
+                }
+                
+                element.style.left = leftPos + 'vw';
+                element.style.animationDelay = (Math.random() * -30) + 's'; 
+                const duration = 15 + Math.random() * 15;
+                element.style.animationDuration = duration + 's';
+                
+                container.appendChild(element);
+            }
+        }
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 1.5, 12);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            clock = new THREE.Clock();
+            treeGroup = new THREE.Group();
+            
+            const strands = 16; 
+            const particlesPerStrand = 900;
+            const totalParticles = strands * particlesPerStrand;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(totalParticles * 3);
+            const colors = new Float32Array(totalParticles * 3);
+
+            const colorGreenLight = new THREE.Color(0x86efac); 
+            const colorGreenMid = new THREE.Color(0x22c55e);   
+            const colorGreenDark = new THREE.Color(0x14532d);  
+
+            for (let s = 0; s < strands; s++) {
+                const strandOffset = (s / strands) * Math.PI * 2;
+                for (let i = 0; i < particlesPerStrand; i++) {
+                    const idx = (s * particlesPerStrand + i);
+                    const p = i / particlesPerStrand; 
+                    const height = p * 8.5; 
+                    const angle = p * 13 + strandOffset; 
+                    const radius = (1 - p) * 3.8; 
+
+                    positions[idx * 3] = Math.cos(angle) * radius + (Math.random() - 0.5) * 0.15;
+                    positions[idx * 3 + 1] = height - 3.5;
+                    positions[idx * 3 + 2] = Math.sin(angle) * radius + (Math.random() - 0.5) * 0.15;
+
+                    const mixedColor = colorGreenDark.clone().lerp(colorGreenMid, p).lerp(colorGreenLight, p * 0.5);
+                    colors[idx * 3] = mixedColor.r;
+                    colors[idx * 3 + 1] = mixedColor.g;
+                    colors[idx * 3 + 2] = mixedColor.b;
+                }
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+            const material = new THREE.PointsMaterial({
+                size: 0.06,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.7,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending 
+            });
+
+            treeGroup.add(new THREE.Points(geometry, material));
+
+            const ledCount = 90;
+            const ledColors = [0xffffff, 0xfef08a, 0xfca5a5, 0x86efac, 0x93c5fd];
+            for (let i = 0; i < ledCount; i++) {
+                const p = i / ledCount;
+                const angle = p * 28;
+                const radius = (1 - p) * 3.85;
+                const led = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.06, 8, 8),
+                    new THREE.MeshBasicMaterial({ color: ledColors[i % ledColors.length], transparent: true })
+                );
+                led.position.set(Math.cos(angle)*radius, p*8.5-3.5, Math.sin(angle)*radius);
+                led.userData = { phase: Math.random() * 20 };
+                ledLights.push(led);
+                treeGroup.add(led);
+            }
+
+            const starShape = new THREE.Shape();
+            const spikes = 5;
+            for (let i = 0; i < spikes * 2; i++) {
+                const angle = (i / (spikes * 2)) * Math.PI * 2;
+                const radius = i % 2 === 0 ? 0.65 : 0.3;
+                const x = Math.cos(angle) * radius;
+                const y = Math.sin(angle) * radius;
+                if (i === 0) starShape.moveTo(x, y);
+                else starShape.lineTo(x, y);
+            }
+            starShape.closePath();
+            star = new THREE.Mesh(new THREE.ShapeGeometry(starShape), new THREE.MeshBasicMaterial({ color: 0xffd700, side: THREE.DoubleSide }));
+            star.position.y = 5.2;
+            treeGroup.add(star);
+
+            scene.add(treeGroup);
+
+            const snowGeo = new THREE.BufferGeometry();
+            const snowCount = 3000;
+            const snowPos = new Float32Array(snowCount * 3);
+            for(let i=0; i<snowCount; i++) {
+                snowPos[i*3] = (Math.random() - 0.5) * 40;
+                snowPos[i*3+1] = Math.random() * 30 - 5;
+                snowPos[i*3+2] = (Math.random() - 0.5) * 40;
+            }
+            snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3));
+            snow = new THREE.Points(snowGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.04, transparent: true, opacity: 0.6 }));
+            scene.add(snow);
+
+            window.addEventListener('mousedown', () => isDragging = true);
+            window.addEventListener('mouseup', () => isDragging = false);
+            window.addEventListener('mousemove', (e) => { if(isDragging) targetRotationY += e.movementX * 0.005; });
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = clock.getElapsedTime();
+            if(!isDragging) targetRotationY += 0.004;
+            treeGroup.rotation.y += (targetRotationY - treeGroup.rotation.y) * 0.05;
+            star.scale.setScalar(1 + Math.sin(time*3)*0.15);
+            star.rotation.z += 0.01;
+            ledLights.forEach(led => {
+                const b = 0.4 + Math.sin(time*3 + led.userData.phase)*0.6;
+                led.scale.setScalar(b);
+                led.material.opacity = b;
+            });
+            const pos = snow.geometry.attributes.position.array;
+            for(let i=1; i<pos.length; i+=3) {
+                pos[i] -= 0.03;
+                if(pos[i] < -5) pos[i] = 25;
+            }
+            snow.geometry.attributes.position.needsUpdate = true;
+            renderer.render(scene, camera);
+        }
+
+        function toggleMusic() {
+            const m = document.getElementById('bgMusic');
+            const s = document.getElementById('m-status');
+            if (m.paused) { m.play().catch(() => {}); s.innerText = "BẬT"; }
+            else { m.pause(); s.innerText = "TẮT"; }
+        }
+
+        function openCard() { document.getElementById('greeting-modal').style.display = 'flex'; }
+        function closeCard() { document.getElementById('greeting-modal').style.display = 'none'; }
+
+        window.onload = () => { init(); animate(); createFallingElements(); };
+    </script>
+</body>
+</html>
